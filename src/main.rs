@@ -3,6 +3,8 @@ use ggez::{self, *};
 use std::{env, path};
 
 mod input;
+mod world;
+mod components;
 
 fn main() {
     // ?
@@ -33,7 +35,7 @@ fn main() {
 
 // This struct contains all the state relevant to our game.
 struct MainState {
-    x: f32,
+    world: world::World,
     input_binding: input::Binding,
 }
 
@@ -49,7 +51,7 @@ impl MainState {
         //     scenes: scenestack,
         // }
         Self {
-            x: 0.0,
+            world: world::World::new(),
             input_binding: input::create_input_binding(),
         }
     }
@@ -67,7 +69,7 @@ impl event::EventHandler for MainState {
 
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
-            // self.scenes.update(ctx);
+            self.world.update(ctx);
         }
         // self.scenes.world.resources.sync(ctx);
 
