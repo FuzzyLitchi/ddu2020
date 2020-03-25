@@ -1,4 +1,4 @@
-use crate::{input, components, systems};
+use crate::{input, components, systems, sprites};
 
 use ggez::graphics::*;
 use ggez_goodies::{Point2, Vector2};
@@ -6,11 +6,14 @@ use specs::{self, world::Builder, WorldExt};
 
 // The game world. Every entity lives in here.
 pub struct World {
+    // ECS
     specs_world: specs::World, // Contains components and entities
     dispatcher: specs::Dispatcher<'static, 'static>, // Contains systems
 
-    // tmp
-    mesh: Mesh,
+    // Meshes for rendering
+    sprites: Vec<Image>, // Sprites are loaded upen world initialization and
+                         // aren't supposed to change after that
+    square: Mesh, // Mesh for rendering rectangles
 }
 
 impl World {
@@ -25,11 +28,23 @@ impl World {
         let mut dispatcher = systems::register_systems();
         dispatcher.setup(&mut specs_world);
 
+        // Add mesh for debug square rendering
+        let square = Mesh::new_rectangle(
+            ctx,
+            DrawMode::fill(),
+            Rect::new(0.0, 0.0, 1.0, 1.0),
+            Color::new(0.0, 0.0, 1.0, 1.0)
+        ).unwrap();
+
+        // Add images for sprite rendering
+        let sprites = sprites::load_sprites(ctx);
+
         let mut the_world = Self {
             // resources: store,
             specs_world,
             dispatcher,
-            mesh: Mesh::new_circle(ctx, DrawMode::fill(), Point2::new(0.0, 0.0), 32.0, 1.0, Color::new(0.0, 0.0, 1.0, 1.0)).unwrap()
+            square,
+            sprites,
         };
 
         // Make a test entity.
@@ -40,7 +55,7 @@ impl World {
             .with(components::Motion {
                 velocity: Vector2::new(1.0, 1.0),
             })
-            .with(components::Renderable)
+            .with(components::Renderable::SpriteId(sprites::SMILEY))
             .build();
 
         the_world
@@ -50,7 +65,7 @@ impl World {
             .with(components::Motion {
                 velocity: Vector2::new(1.0, 1.0),
             })
-            .with(components::Renderable)
+            .with(components::Renderable::Rectangle(30.0, 20.0))
             .with(components::MouseTeleport)
             .build();
 
@@ -71,8 +86,22 @@ impl World {
 
         let (renderable, position): (ReadStorage<Renderable>, ReadStorage<Position>) = self.specs_world.system_data();
         
-        for (_renderable, position) in (&renderable, &position).join() {
-            draw(ctx, &self.mesh, DrawParam::default().dest(position.0))?;
+        for (renderable, position) in (&renderable, &position).join() {
+            match renderable {
+                Renderable::Rectangle(w, h) => draw(
+                    ctx,
+                    &self.square,
+                    DrawParam::default()
+                        .dest(position.0)
+                        .scale(Vector2::new(*w, *h))
+                )?,
+                Renderable::SpriteId(id) => draw(
+                    ctx,
+                    &self.sprites[*id],
+                    DrawParam::default()
+                        .dest(position.0)
+                )?,
+            }
         }
 
         Ok(())

@@ -3,6 +3,8 @@ use ggez_goodies::{Point2, Vector2};
 use specs::*;
 use specs_derive::*;
 
+use crate::sprites::SpriteId;
+
 // This file contains every component. Components are simply storage for some data,
 // they only become useful when systems interact with them. However they are a useful
 // abstraction for organizing our game, and therefor we use them.
@@ -20,9 +22,13 @@ pub struct Motion {
 }
 
 /// A tag to enable redering for the entity
-#[derive(Clone, Debug, Default, Component)]
-#[storage(NullStorage)]
-pub struct Renderable;
+#[derive(Clone, Debug, Component)]
+#[storage(VecStorage)]
+pub enum Renderable {
+    // Width and Height
+    Rectangle(f32, f32),
+    SpriteId(SpriteId),
+}
 
 /// A tag to enable mouse teleport
 #[derive(Clone, Debug, Default, Component)]

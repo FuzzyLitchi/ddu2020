@@ -6,6 +6,7 @@ mod input;
 mod world;
 mod components;
 mod systems;
+mod sprites;
 
 fn main() {
     // ?
