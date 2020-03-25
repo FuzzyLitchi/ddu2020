@@ -65,7 +65,10 @@ impl World {
             .with(components::Motion {
                 velocity: Vector2::new(1.0, 1.0),
             })
-            .with(components::Renderable::Rectangle(30.0, 20.0))
+            .with(components::Renderable::Rectangle {
+                w: 30.0,
+                h: 20.0
+            })
             .with(components::MouseTeleport)
             .build();
 
@@ -84,17 +87,21 @@ impl World {
         use components::{Renderable, Position};
         use specs::{Join, ReadStorage};
 
+        // We can draw every entity that has both a position and a renderable component
         let (renderable, position): (ReadStorage<Renderable>, ReadStorage<Position>) = self.specs_world.system_data();
         
+        // .join() to make sure we only get entities that have both
         for (renderable, position) in (&renderable, &position).join() {
             match renderable {
-                Renderable::Rectangle(w, h) => draw(
+                // Draw rectangle
+                Renderable::Rectangle {w, h} => draw(
                     ctx,
                     &self.square,
                     DrawParam::default()
                         .dest(position.0)
                         .scale(Vector2::new(*w, *h))
                 )?,
+                // Draw sprite
                 Renderable::SpriteId(id) => draw(
                     ctx,
                     &self.sprites[*id],

@@ -9,28 +9,27 @@ use crate::sprites::SpriteId;
 // they only become useful when systems interact with them. However they are a useful
 // abstraction for organizing our game, and therefor we use them.
 
-/// A position in the game world.
+// A position in the game world.
 #[derive(Clone, Debug, Component)]
 #[storage(VecStorage)]
 pub struct Position(pub Point2);
 
-/// Motion in the game world.
+// Motion in the game world.
 #[derive(Clone, Debug, Component)]
 #[storage(VecStorage)]
 pub struct Motion {
     pub velocity: Vector2,
 }
 
-/// A tag to enable redering for the entity
+// A tag to enable redering for the entity
 #[derive(Clone, Debug, Component)]
 #[storage(VecStorage)]
 pub enum Renderable {
-    // Width and Height
-    Rectangle(f32, f32),
+    Rectangle {w: f32, h: f32},
     SpriteId(SpriteId),
 }
 
-/// A tag to enable mouse teleport
+// A tag to enable mouse teleport
 #[derive(Clone, Debug, Default, Component)]
 #[storage(NullStorage)]
 pub struct MouseTeleport;
