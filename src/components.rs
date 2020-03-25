@@ -17,11 +17,16 @@ pub struct Position(pub Point2);
 #[storage(VecStorage)]
 pub struct Motion {
     pub velocity: Vector2,
-    pub acceleration: Vector2,
 }
+
+/// A tag to enable redering for the entity
+#[derive(Clone, Debug, Default, Component)]
+#[storage(NullStorage)]
+pub struct Renderable;
 
 // We add every component to our specs world
 pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Position>();
     specs_world.register::<Motion>();
+    specs_world.register::<Renderable>();
 }

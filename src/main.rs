@@ -5,6 +5,7 @@ use std::{env, path};
 mod input;
 mod world;
 mod components;
+mod systems;
 
 fn main() {
     // ?
@@ -51,7 +52,7 @@ impl MainState {
         //     scenes: scenestack,
         // }
         Self {
-            world: world::World::new(),
+            world: world::World::new(ctx),
             input_binding: input::create_input_binding(),
         }
     }
@@ -78,7 +79,7 @@ impl event::EventHandler for MainState {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx, graphics::Color::from((0.0, 0.0, 0.4, 0.0)));
-        // self.scenes.draw(ctx);
+        self.world.draw(ctx)?;
         graphics::present(ctx)
     }
 
