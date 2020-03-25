@@ -1,0 +1,15 @@
+[package]
+name = "ddu2020"
+version = "0.1.0"
+authors = ["Polly Nielsen Boutet-Livoff <pollyboutet@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.dev]
+opt-level = 1
+
+[dependencies]
+ggez = "0.5"
+ggez-goodies = "0.5"
+specs = "0.16"
+specs-derive = "0.4"
