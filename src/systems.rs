@@ -1,5 +1,6 @@
 //! specs systems.
 use crate::components::*;
+use crate::input;
 use specs::{self, Join};
 
 pub struct MovementSystem;
@@ -20,9 +21,30 @@ impl<'a> specs::System<'a> for MovementSystem {
     }
 }
 
+pub struct MouseSystem;
+
+impl<'a> specs::System<'a> for MouseSystem {
+    type SystemData = (
+        specs::WriteStorage<'a, Position>,
+        specs::ReadStorage<'a, MouseTeleport>,
+        specs::Read<'a, input::State>,
+    );
+
+    fn run(&mut self, (mut pos, mouse_tele, input): Self::SystemData) {
+        if !input.get_button_down(input::Button::Left) {
+            return;
+        }
+
+        for (pos, _) in (&mut pos, &mouse_tele).join() {
+            pos.0 = input.mouse_position();
+        }
+    }
+}
+
 // Create specs dispatcher with systems
 pub fn register_systems() -> specs::Dispatcher<'static, 'static> {
     specs::DispatcherBuilder::new()
         .with(MovementSystem, "sys_movement", &[])
+        .with(MouseSystem, "mouse_tele_movement", &[])
         .build()
 }

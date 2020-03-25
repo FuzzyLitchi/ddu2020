@@ -91,7 +91,7 @@ impl event::EventHandler for MainState {
         _repeat: bool,
     ) {
         if let Some(ev) = self.input_binding.resolve(keycode) {
-            // self.scenes.input(ev, true);
+            self.world.handle_input(ev, true);
         }
     }
 
@@ -102,7 +102,7 @@ impl event::EventHandler for MainState {
         _keymod: event::KeyMods,
     ) {
         if let Some(ev) = self.input_binding.resolve(keycode) {
-            // self.scenes.input(ev, false);
+            self.world.handle_input(ev, false);
         }
     }
 
@@ -114,7 +114,30 @@ impl event::EventHandler for MainState {
         _y: f32
     ) {
         if let Some(ev) = self.input_binding.resolve(button) {
-            // self.scenes.input(ev, false);
+            self.world.handle_input(ev, true);
         }
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: event::MouseButton,
+        _x: f32,
+        _y: f32
+    ) {
+        if let Some(ev) = self.input_binding.resolve(button) {
+            self.world.handle_input(ev, false);
+        }
+    }
+
+    fn mouse_motion_event(
+        &mut self,
+        _ctx: &mut Context,
+        x: f32,
+        y: f32,
+        _dx: f32,
+        _dy: f32
+    ) {
+        self.world.handle_mouse_motion(x, y);
     }
 }

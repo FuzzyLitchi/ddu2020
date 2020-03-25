@@ -20,11 +20,9 @@ impl From<MouseButton> for InputType {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum InputEffect<Axes, Buttons>
+pub enum InputEffect<Buttons>
 where
-    Axes: Hash + Eq + Clone,
     Buttons: Hash + Eq + Clone,
 {
-    Axis(Axes, bool),
     Button(Buttons),
 }

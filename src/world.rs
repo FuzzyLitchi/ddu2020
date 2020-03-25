@@ -6,7 +6,6 @@ use specs::{self, world::Builder, WorldExt};
 
 // The game world. Every entity lives in here.
 pub struct World {
-    input_state: input::State,
     specs_world: specs::World, // Contains components and entities
     dispatcher: specs::Dispatcher<'static, 'static>, // Contains systems
 
@@ -16,15 +15,18 @@ pub struct World {
 
 impl World {
     pub fn new(ctx: &mut ggez::Context) -> Self {
+        // Create empty specs world
         let mut specs_world = specs::WorldExt::new();
         components::register_components(&mut specs_world);
+
+        // Add input state
+        specs_world.insert(input::State::new());
 
         let mut dispatcher = systems::register_systems();
         dispatcher.setup(&mut specs_world);
 
         let mut the_world = Self {
             // resources: store,
-            input_state: input::State::new(),
             specs_world,
             dispatcher,
             mesh: Mesh::new_circle(ctx, DrawMode::fill(), Point2::new(0.0, 0.0), 32.0, 1.0, Color::new(0.0, 0.0, 1.0, 1.0)).unwrap()
@@ -42,9 +44,24 @@ impl World {
             .build();
 
         the_world
+            .specs_world
+            .create_entity()
+            .with(components::Position(Point2::new(0.0, 0.0)))
+            .with(components::Motion {
+                velocity: Vector2::new(1.0, 1.0),
+            })
+            .with(components::Renderable)
+            .with(components::MouseTeleport)
+            .build();
+
+        the_world
     }
 
     pub fn update(&mut self, _ctx: &mut ggez::Context) {
+        // Update input state
+        self.specs_world.fetch_mut::<input::State>().update();
+        
+        // Run systems
         self.dispatcher.dispatch(&mut self.specs_world);
     }
 
@@ -59,5 +76,15 @@ impl World {
         }
 
         Ok(())
+    }
+
+    pub fn handle_input(&mut self, ev: input::Event, started: bool) {
+        self.specs_world.fetch_mut::<input::State>()
+            .update_effect(ev, started);
+    }
+
+    pub fn handle_mouse_motion(&mut self, x: f32, y: f32) {
+        self.specs_world.fetch_mut::<input::State>()
+            .update_mouse_position(x, y);
     }
 }

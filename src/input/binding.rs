@@ -4,33 +4,21 @@ use std::hash::Hash;
 
 use super::types::*;
 
-pub struct InputBinding<Axes, Buttons>
+pub struct InputBinding<Buttons>
 where
-    Axes: Hash + Eq + Clone,
     Buttons: Hash + Eq + Clone,
 {
-    bindings: HashMap<InputType, InputEffect<Axes, Buttons>>,
+    bindings: HashMap<InputType, InputEffect<Buttons>>,
 }
 
-impl<Axes, Buttons> InputBinding<Axes, Buttons>
+impl<Buttons> InputBinding<Buttons>
 where
-    Axes: Hash + Eq + Clone,
     Buttons: Hash + Eq + Clone,
 {
     pub fn new() -> Self {
         InputBinding {
             bindings: HashMap::new(),
         }
-    }
-
-    /// Adds a key binding connecting the given keycode to the given
-    /// logical axis.
-    pub fn bind_key_to_axis(mut self, keycode: KeyCode, axis: Axes, positive: bool) -> Self {
-        self.bindings.insert(
-            InputType::KeyEvent(keycode),
-            InputEffect::Axis(axis.clone(), positive),
-        );
-        self
     }
 
     /// Adds a key binding connecting the given keycode to the given
@@ -54,7 +42,7 @@ where
     }
 
     /// Takes an physical input type and turns it into a logical input type (keycode -> axis/button).
-    pub fn resolve<T: Into<InputType>>(&self, input: T) -> Option<InputEffect<Axes, Buttons>> {
+    pub fn resolve<T: Into<InputType>>(&self, input: T) -> Option<InputEffect<Buttons>> {
         self.bindings.get(&input.into()).cloned()
     }
 }

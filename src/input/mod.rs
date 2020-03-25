@@ -13,23 +13,13 @@ pub enum Button {
     Quit,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum Axis {
-    Vert,
-    Horz,
-}
-
-pub type Binding = binding::InputBinding<Axis, Button>;
-pub type Event = types::InputEffect<Axis, Button>;
-pub type State = state::InputState<Axis, Button>;
+pub type Binding = binding::InputBinding<Button>;
+pub type Event = types::InputEffect<Button>;
+pub type State = state::InputState<Button>;
 
 /// Create the default keybindings for our input state.
-pub fn create_input_binding() -> binding::InputBinding<Axis, Button> {
+pub fn create_input_binding() -> binding::InputBinding<Button> {
     binding::InputBinding::new()
-        .bind_key_to_axis(KeyCode::Up, Axis::Vert, true)
-        .bind_key_to_axis(KeyCode::Down, Axis::Vert, false)
-        .bind_key_to_axis(KeyCode::Left, Axis::Horz, false)
-        .bind_key_to_axis(KeyCode::Right, Axis::Horz, true)
         .bind_mouse_to_button(MouseButton::Left, Button::Left)
         .bind_mouse_to_button(MouseButton::Right, Button::Right)
         .bind_key_to_button(KeyCode::Escape, Button::Quit)

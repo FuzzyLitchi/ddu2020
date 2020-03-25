@@ -24,9 +24,15 @@ pub struct Motion {
 #[storage(NullStorage)]
 pub struct Renderable;
 
+/// A tag to enable mouse teleport
+#[derive(Clone, Debug, Default, Component)]
+#[storage(NullStorage)]
+pub struct MouseTeleport;
+
 // We add every component to our specs world
 pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Position>();
     specs_world.register::<Motion>();
     specs_world.register::<Renderable>();
+    specs_world.register::<MouseTeleport>();
 }

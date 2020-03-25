@@ -2,29 +2,7 @@ use std::hash::Hash;
 use std::collections::HashMap;
 
 use super::types::*;
-
-#[derive(Debug, Copy, Clone)]
-enum AxisState {
-    Positive,
-    Neutral,
-    Negative
-}
-
-impl Default for AxisState{
-    fn default() -> Self {
-        AxisState::Neutral
-    }
-}
-
-impl AxisState {
-    fn as_f32(self) -> f32 {
-        match self {
-            AxisState::Positive => 1.0,
-            AxisState::Neutral => 0.0,
-            AxisState::Negative => -1.0
-        }
-    }
-}
+use ggez_goodies::Point2;
 
 #[derive(Debug, Copy, Clone, Default)]
 struct ButtonState {
@@ -32,27 +10,24 @@ struct ButtonState {
     pressed_last_frame: bool,
 }
 
-#[derive(Debug)]
-pub struct InputState<Axes, Buttons>
+#[derive(Debug, Clone)]
+pub struct InputState<Buttons>
 where
-    Axes: Hash + Eq + Clone,
     Buttons: Hash + Eq + Clone,
 {
-    // Input state for axes
-    axes: HashMap<Axes, AxisState>,
     // Input states for buttons
     buttons: HashMap<Buttons, ButtonState>,
+    mouse_position: Point2,
 }
 
-impl<Axes, Buttons> InputState<Axes, Buttons>
+impl<Buttons> InputState<Buttons>
 where
-    Axes: Eq + Hash + Clone,
     Buttons: Eq + Hash + Clone,
 {
     pub fn new() -> Self {
         InputState {
-            axes: HashMap::new(),
             buttons: HashMap::new(),
+            mouse_position: Point2::new(0.0, 0.0),
         }
     }
 
@@ -60,49 +35,21 @@ where
     /// physical input state.  Should be called in the update()
     /// handler before the input dependent update.
     /// So, it will do things like move the axes and so on.
-    fn update(&mut self) {
+    pub fn update(&mut self) {
         for (_button, button_status) in self.buttons.iter_mut() {
             button_status.pressed_last_frame = button_status.pressed;
         }
     }
 
-    /// This method should get called by your key_down_event handler.
-    pub fn update_button_down(&mut self, button: Buttons) {
-        self.update_effect(InputEffect::Button(button), true);
-    }
-
-    /// This method should get called by your key_up_event handler.
-    pub fn update_button_up(&mut self, button: Buttons) {
-        self.update_effect(InputEffect::Button(button), false);
-    }
-
-    /// This method should get called by your key_up_event handler.
-    pub fn update_axis_start(&mut self, axis: Axes, positive: bool) {
-        self.update_effect(InputEffect::Axis(axis, positive), true);
-    }
-
-    pub fn update_axis_stop(&mut self, axis: Axes, positive: bool) {
-        self.update_effect(InputEffect::Axis(axis, positive), false);
-    }
-
     /// Takes an InputEffect and actually applies it.
-    pub fn update_effect(&mut self, effect: InputEffect<Axes, Buttons>, started: bool) {
+    pub fn update_effect(&mut self, effect: InputEffect<Buttons>, started: bool) {
         match effect {
-            InputEffect::Axis(axis, positive) => {
-                unimplemented!();
-            }
             InputEffect::Button(button) => {
                 let f = || ButtonState::default();
                 let button_status = self.buttons.entry(button).or_insert_with(f);
                 button_status.pressed = started;
             }
         }
-    }
-
-    pub fn get_axis(&self, axis: Axes) -> f32 {
-        let d = AxisState::default();
-        let axis_status = self.axes.get(&axis).unwrap_or(&d);
-        axis_status.as_f32()
     }
 
     fn get_button(&self, button: Buttons) -> ButtonState {
@@ -134,18 +81,29 @@ where
         !b.pressed && b.pressed_last_frame
     }
 
-    pub fn mouse_position() {
-        unimplemented!()
+    pub fn update_mouse_position(&mut self, x: f32, y: f32) {
+        self.mouse_position.x = x;
+        self.mouse_position.y = y;
+    }
+
+    pub fn mouse_position(&self) -> Point2 {
+        self.mouse_position
     }
 
     pub fn reset_input_state(&mut self) {
-        for (_axis, axis_status) in self.axes.iter_mut() {
-            *axis_status = AxisState::Neutral;
-        }
-
         for (_button, button_status) in self.buttons.iter_mut() {
             button_status.pressed = false;
             button_status.pressed_last_frame = false;
         }
+    }
+}
+
+// We implement Default so specs accepts this as a Read type in system data.
+impl<Buttons> Default for InputState<Buttons>
+where
+    Buttons: Hash + Eq + Clone,
+{
+    fn default() -> Self {
+        panic!("Input state is not supposed to be generated from default");
     }
 }
