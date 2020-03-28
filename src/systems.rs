@@ -2,6 +2,7 @@
 use crate::components::*;
 use crate::input;
 use specs::{self, Join};
+use ggez_goodies::Vector2;
 
 pub struct MovementSystem;
 
@@ -47,10 +48,20 @@ impl<'a> specs::System<'a> for FriendlySystem {
         }
 
         // TODO: I could optimize this code to only run when Action::Goto changes or collisions and stuff
-        for (pos, motion, friendly) in (&pos, &mut motion, &friendly).join() {
+        for (pos, motion, friendly) in (&pos, &mut motion, &mut friendly).join() {
             match friendly.action {
                 Action::Goto(target_pos) => {
-                    let direction = (target_pos - pos.0).normalize();
+                    let vector = target_pos - pos.0;
+
+                    // If we're close enough, stop.
+                    pub const DISTANCE_BEFORE_STOP: f32 = 4.0;
+                    if vector.length() < DISTANCE_BEFORE_STOP {
+                        friendly.action = Action::Standby;
+                        motion.velocity = Vector2::zero();
+                        continue;
+                    }
+
+                    let direction = vector.normalize();
 
                     motion.velocity = direction * WALK_SPEED;
                 }
