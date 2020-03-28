@@ -6,8 +6,12 @@ use ggez_goodies::Point2;
 
 #[derive(Debug, Copy, Clone, Default)]
 struct ButtonState {
+    // Current state
+    down: bool,
+    // Was pressed this frame
     pressed: bool,
-    pressed_last_frame: bool,
+    // Was released this frame
+    released: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -37,7 +41,8 @@ where
     /// So, it will do things like move the axes and so on.
     pub fn update(&mut self) {
         for (_button, button_status) in self.buttons.iter_mut() {
-            button_status.pressed_last_frame = button_status.pressed;
+            button_status.pressed = false;
+            button_status.released = false;
         }
     }
 
@@ -47,7 +52,12 @@ where
             InputEffect::Button(button) => {
                 let f = || ButtonState::default();
                 let button_status = self.buttons.entry(button).or_insert_with(f);
-                button_status.pressed = started;
+                button_status.down = started;
+
+                match started {
+                    true => button_status.pressed = true,
+                    false => button_status.released = true,
+                }
             }
         }
     }
@@ -59,11 +69,11 @@ where
     }
 
     pub fn get_button_down(&self, axis: Buttons) -> bool {
-        self.get_button(axis).pressed
+        self.get_button(axis).down
     }
 
     pub fn get_button_up(&self, axis: Buttons) -> bool {
-        !self.get_button(axis).pressed
+        !self.get_button(axis).down
     }
 
     /// Returns whether or not the button was pressed this frame,
@@ -72,13 +82,11 @@ where
     /// Basically, `get_button_down()` and `get_button_up()` are level
     /// triggers, this and `get_button_released()` are edge triggered.
     pub fn get_button_pressed(&self, axis: Buttons) -> bool {
-        let b = self.get_button(axis);
-        b.pressed && !b.pressed_last_frame
+        self.get_button(axis).pressed
     }
 
     pub fn get_button_released(&self, axis: Buttons) -> bool {
-        let b = self.get_button(axis);
-        !b.pressed && b.pressed_last_frame
+        self.get_button(axis).released
     }
 
     pub fn update_mouse_position(&mut self, x: f32, y: f32) {
@@ -88,13 +96,6 @@ where
 
     pub fn mouse_position(&self) -> Point2 {
         self.mouse_position
-    }
-
-    pub fn reset_input_state(&mut self) {
-        for (_button, button_status) in self.buttons.iter_mut() {
-            button_status.pressed = false;
-            button_status.pressed_last_frame = false;
-        }
     }
 }
 

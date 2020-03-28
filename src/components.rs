@@ -29,15 +29,32 @@ pub enum Renderable {
     SpriteId(SpriteId),
 }
 
-// A tag to enable mouse teleport
+// Friendly character
 #[derive(Clone, Debug, Default, Component)]
-#[storage(NullStorage)]
-pub struct MouseTeleport;
+#[storage(VecStorage)]
+pub struct Friendly {
+    pub action: Action
+}
+
+pub const WALK_SPEED: f32 = 3.0;
+
+#[derive(Clone, Debug)]
+pub enum Action {
+    Standby,
+    Goto(Point2),
+    //Attack(EntityId)??
+}
+
+impl Default for Action {
+    fn default() -> Self {
+        return Action::Standby;
+    }
+}
 
 // We add every component to our specs world
 pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Position>();
     specs_world.register::<Motion>();
     specs_world.register::<Renderable>();
-    specs_world.register::<MouseTeleport>();
+    specs_world.register::<Friendly>();
 }

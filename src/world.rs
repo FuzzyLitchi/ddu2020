@@ -61,26 +61,27 @@ impl World {
         the_world
             .specs_world
             .create_entity()
-            .with(components::Position(Point2::new(0.0, 0.0)))
+            .with(components::Position(Point2::new(200.0, 200.0)))
             .with(components::Motion {
-                velocity: Vector2::new(1.0, 1.0),
+                velocity: Vector2::new(0.0, 0.0),
             })
             .with(components::Renderable::Rectangle {
                 w: 30.0,
                 h: 20.0
             })
-            .with(components::MouseTeleport)
+            .with(components::Friendly::default())
             .build();
 
         the_world
     }
 
     pub fn update(&mut self, _ctx: &mut ggez::Context) {
-        // Update input state
-        self.specs_world.fetch_mut::<input::State>().update();
-        
         // Run systems
         self.dispatcher.dispatch(&mut self.specs_world);
+        
+        // Update input state
+        // This has to be last. Order is important for get_button_pressed and _released.
+        self.specs_world.fetch_mut::<input::State>().update();
     }
 
     pub fn draw(&mut self, ctx: &mut ggez::Context) -> ggez::GameResult<()> {

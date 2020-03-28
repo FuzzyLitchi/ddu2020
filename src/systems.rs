@@ -21,22 +21,41 @@ impl<'a> specs::System<'a> for MovementSystem {
     }
 }
 
-pub struct MouseSystem;
+pub struct FriendlySystem;
 
-impl<'a> specs::System<'a> for MouseSystem {
+impl<'a> specs::System<'a> for FriendlySystem {
     type SystemData = (
-        specs::WriteStorage<'a, Position>,
-        specs::ReadStorage<'a, MouseTeleport>,
+        specs::ReadStorage<'a, Position>,
+        specs::WriteStorage<'a, Motion>,
+        specs::WriteStorage<'a, Friendly>,
         specs::Read<'a, input::State>,
     );
 
-    fn run(&mut self, (mut pos, mouse_tele, input): Self::SystemData) {
-        if !input.get_button_down(input::Button::Left) {
-            return;
+    fn run(&mut self, data: Self::SystemData) {
+        let (
+            pos,
+            mut motion,
+            mut friendly,
+            input
+        ) = data;
+        
+        if input.get_button_pressed(input::Button::Right) {
+            // TODO limit this to selected enetities
+            for friendly in (&mut friendly).join() {
+                friendly.action = Action::Goto(input.mouse_position());
+            }
         }
 
-        for (pos, _) in (&mut pos, &mouse_tele).join() {
-            pos.0 = input.mouse_position();
+        // TODO: I could optimize this code to only run when Action::Goto changes or collisions and stuff
+        for (pos, motion, friendly) in (&pos, &mut motion, &friendly).join() {
+            match friendly.action {
+                Action::Goto(target_pos) => {
+                    let direction = (target_pos - pos.0).normalize();
+
+                    motion.velocity = direction * WALK_SPEED;
+                }
+                _ => (),
+            }
         }
     }
 }
@@ -44,7 +63,7 @@ impl<'a> specs::System<'a> for MouseSystem {
 // Create specs dispatcher with systems
 pub fn register_systems() -> specs::Dispatcher<'static, 'static> {
     specs::DispatcherBuilder::new()
-        .with(MovementSystem, "sys_movement", &[])
-        .with(MouseSystem, "mouse_tele_movement", &[])
+        .with(MovementSystem, "movement", &[])
+        .with(FriendlySystem, "friendly", &[])
         .build()
 }
