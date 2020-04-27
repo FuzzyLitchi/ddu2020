@@ -15,6 +15,9 @@ impl SelectionBox {
     }
 }
 
+// Since Default for Option is None, this works without needing register_resourcesR
+/*
 pub fn register_resources(specs_world: &mut World) {
     specs_world.insert::<Option<SelectionBox>>(None);
 }
+*/

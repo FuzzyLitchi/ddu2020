@@ -25,7 +25,11 @@ pub struct Motion {
 #[derive(Clone, Debug, Component)]
 #[storage(VecStorage)]
 pub enum Renderable {
-    Rectangle {w: f32, h: f32},
+    Rectangle {
+        w: f32,
+        h: f32,
+        color: ggez::graphics::Color
+    },
     SpriteId(SpriteId),
 }
 

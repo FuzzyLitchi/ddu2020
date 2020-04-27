@@ -8,6 +8,7 @@ mod systems;
 mod components;
 mod resources;
 mod sprites;
+mod level;
 
 fn main() {
     // ?

@@ -1,5 +1,12 @@
 use rand::prelude::*;
-use crate::{input, systems, components, resources, sprites};
+use crate::{
+    input,
+    systems,
+    components,
+    resources,
+    sprites,
+    level
+};
 
 use ggez::graphics::*;
 use ggez_goodies::{Point2, Vector2};
@@ -34,7 +41,7 @@ impl World {
             ctx,
             DrawMode::fill(),
             Rect::new(0.0, 0.0, 1.0, 1.0),
-            Color::new(0.0, 0.0, 1.0, 1.0)
+            Color::new(1.0, 1.0, 1.0, 1.0)
         ).unwrap();
 
         // Add images for sprite rendering
@@ -62,22 +69,25 @@ impl World {
         let mut rng = thread_rng();
         for _ in 0..100 {
             the_world
-            .specs_world
-            .create_entity()
-            .with(components::Position(Point2::new(
-                rng.gen_range(0.0, 800.0),
-                rng.gen_range(0.0, 600.0)
-            )))
-            .with(components::Motion {
-                velocity: Vector2::new(0.0, 0.0),
-            })
-            .with(components::Renderable::Rectangle {
-                w: 30.0,
-                h: 20.0
-            })
-            .with(components::Friendly::default())
-            .build();
+                .specs_world
+                .create_entity()
+                .with(components::Position(Point2::new(
+                    rng.gen_range(0.0, 800.0),
+                    rng.gen_range(0.0, 600.0)
+                )))
+                .with(components::Motion {
+                    velocity: Vector2::new(0.0, 0.0),
+                })
+                .with(components::Renderable::Rectangle {
+                    w: 30.0,
+                    h: 20.0,
+                    color: ggez::graphics::Color::new(0.0, 0.0, 1.0, 1.0),
+                })
+                .with(components::Friendly::default())
+                .build();
         }
+
+        level::load_level(&"test.png", &mut the_world.specs_world);
 
         the_world
     }
@@ -102,12 +112,13 @@ impl World {
         for (renderable, position) in (&renderable, &position).join() {
             match renderable {
                 // Draw rectangle
-                Renderable::Rectangle {w, h} => draw(
+                Renderable::Rectangle {w, h, color} => draw(
                     ctx,
                     &self.square,
                     DrawParam::default()
                         .dest(position.0)
                         .scale(Vector2::new(*w, *h))
+                        .color(*color)
                 )?,
                 // Draw sprite
                 Renderable::SpriteId(id) => draw(
@@ -131,6 +142,7 @@ impl World {
                         sel_box.stop.x-sel_box.start.x,
                         sel_box.stop.y-sel_box.start.y,
                     ))
+                    .color(ggez::graphics::Color::new(1.0, 1.0, 1.0, 0.1))
             )?
         }
 
