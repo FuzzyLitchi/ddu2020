@@ -1,6 +1,7 @@
 //! specs systems.
 use crate::components::*;
 use crate::input;
+use crate::resources::*;
 use specs::{self, Join};
 use ggez_goodies::Vector2;
 
@@ -30,6 +31,7 @@ impl<'a> specs::System<'a> for FriendlySystem {
         specs::WriteStorage<'a, Motion>,
         specs::WriteStorage<'a, Friendly>,
         specs::Read<'a, input::State>,
+        specs::Write<'a, Option<SelectionBox>>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -37,13 +39,47 @@ impl<'a> specs::System<'a> for FriendlySystem {
             pos,
             mut motion,
             mut friendly,
-            input
+            input,
+            mut selection_box
         ) = data;
+
+        // Selection box
+        if input.get_button_pressed(input::Button::Left) {
+            let selection_box = selection_box.get_or_insert(SelectionBox::new());
+            selection_box.start = input.mouse_position()
+        }
+
+        if input.get_button_down(input::Button::Left) {
+            let selection_box = selection_box.get_or_insert(SelectionBox::new());
+            selection_box.stop = input.mouse_position()
+        }
+
+        if input.get_button_released(input::Button::Left) {
+            if let Some(sel_box) = &*selection_box {   
+                // Order x and y positions.
+                let x1 = sel_box.start.x.min(sel_box.stop.x);
+                let x2 = sel_box.start.x.max(sel_box.stop.x);
+                let y1 = sel_box.start.y.min(sel_box.stop.y);
+                let y2 = sel_box.start.y.max(sel_box.stop.y);
+                
+                for (pos, friendly) in (&pos, &mut friendly).join() {
+                    // If in bounding box, select
+                    friendly.selected = pos.0.x > x1 && pos.0.x < x2 && pos.0.y > y1 && pos.0.y < y2;
+                }
+            } else {
+                // Maybe use log instead
+                panic!("Button released but no selection box?!");
+            }
+
+            *selection_box = None;
+        }
         
+        // Make selected friendlies go to right click
         if input.get_button_pressed(input::Button::Right) {
-            // TODO limit this to selected enetities
             for friendly in (&mut friendly).join() {
-                friendly.action = Action::Goto(input.mouse_position());
+                if friendly.selected {
+                    friendly.action = Action::Goto(input.mouse_position());
+                }
             }
         }
 

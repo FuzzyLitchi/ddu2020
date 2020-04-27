@@ -33,6 +33,7 @@ pub enum Renderable {
 #[derive(Clone, Debug, Default, Component)]
 #[storage(VecStorage)]
 pub struct Friendly {
+    pub selected: bool,
     pub action: Action
 }
 

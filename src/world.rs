@@ -1,4 +1,5 @@
-use crate::{input, components, systems, sprites};
+use rand::prelude::*;
+use crate::{input, systems, components, resources, sprites};
 
 use ggez::graphics::*;
 use ggez_goodies::{Point2, Vector2};
@@ -58,10 +59,15 @@ impl World {
             .with(components::Renderable::SpriteId(sprites::SMILEY))
             .build();
 
-        the_world
+        let mut rng = thread_rng();
+        for _ in 0..100 {
+            the_world
             .specs_world
             .create_entity()
-            .with(components::Position(Point2::new(200.0, 200.0)))
+            .with(components::Position(Point2::new(
+                rng.gen_range(0.0, 800.0),
+                rng.gen_range(0.0, 600.0)
+            )))
             .with(components::Motion {
                 velocity: Vector2::new(0.0, 0.0),
             })
@@ -71,6 +77,7 @@ impl World {
             })
             .with(components::Friendly::default())
             .build();
+        }
 
         the_world
     }
@@ -110,6 +117,21 @@ impl World {
                         .dest(position.0)
                 )?,
             }
+        }
+
+        // Render selection box
+        let sel_box = self.specs_world.fetch::<Option<resources::SelectionBox>>();
+        if let Some(sel_box) = &*sel_box {
+            draw(
+                ctx,
+                &self.square,
+                DrawParam::default()
+                    .dest(sel_box.start)
+                    .scale(Vector2::new(
+                        sel_box.stop.x-sel_box.start.x,
+                        sel_box.stop.y-sel_box.start.y,
+                    ))
+            )?
         }
 
         Ok(())

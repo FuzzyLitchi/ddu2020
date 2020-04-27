@@ -4,8 +4,9 @@ use std::{env, path};
 
 mod input;
 mod world;
-mod components;
 mod systems;
+mod components;
+mod resources;
 mod sprites;
 
 fn main() {
