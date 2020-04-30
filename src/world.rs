@@ -5,12 +5,14 @@ use crate::{
     components,
     resources,
     sprites,
-    level
+    level,
+    physics
 };
 
 use ggez::graphics::*;
 use ggez_goodies::{Point2, Vector2};
 use specs::{self, world::Builder, WorldExt};
+use collider::geom::*;
 
 // The game world. Every entity lives in here.
 pub struct World {
@@ -68,13 +70,13 @@ impl World {
 
         let mut rng = thread_rng();
         for _ in 0..100 {
-            the_world
+            let x: f64 = rng.gen_range(0.0, 800.0);
+            let y: f64 = rng.gen_range(0.0, 600.0);
+
+            let entity = the_world
                 .specs_world
                 .create_entity()
-                .with(components::Position(Point2::new(
-                    rng.gen_range(0.0, 800.0),
-                    rng.gen_range(0.0, 600.0)
-                )))
+                .with(components::Position(Point2::new(x as f32, y as f32)))
                 .with(components::Motion {
                     velocity: Vector2::new(0.0, 0.0),
                 })
@@ -85,6 +87,9 @@ impl World {
                 })
                 .with(components::Friendly::default())
                 .build();
+            
+            let hitbox = Shape::rect(v2(30.0, 20.0)).place(v2(x, y)).still();
+            physics::add_box_collider(entity, hitbox, false, &mut the_world.specs_world);
         }
 
         level::load_level(&"test.png", &mut the_world.specs_world);

@@ -9,6 +9,7 @@ mod components;
 mod resources;
 mod sprites;
 mod level;
+mod physics;
 
 fn main() {
     // ?

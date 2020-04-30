@@ -21,6 +21,12 @@ pub struct Motion {
     pub velocity: Vector2,
 }
 
+use collider::HbId;
+// A box collider
+#[derive(Clone, Debug, Component)]
+#[storage(VecStorage)]
+pub struct BoxCollider(pub HbId);
+
 // A tag to enable redering for the entity
 #[derive(Clone, Debug, Component)]
 #[storage(VecStorage)]
@@ -34,14 +40,17 @@ pub enum Renderable {
 }
 
 // Friendly character
-#[derive(Clone, Debug, Default, Component)]
-#[storage(VecStorage)]
+#[derive(Clone, Debug, Default)]
 pub struct Friendly {
     pub selected: bool,
     pub action: Action
 }
 
-pub const WALK_SPEED: f32 = 3.0;
+impl Component for Friendly {
+    type Storage = FlaggedStorage<Self, VecStorage<Self>>;
+}
+
+pub const WALK_SPEED: f32 = 60.0;
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -60,6 +69,7 @@ impl Default for Action {
 pub fn register_components(specs_world: &mut World) {
     specs_world.register::<Position>();
     specs_world.register::<Motion>();
+    specs_world.register::<BoxCollider>();
     specs_world.register::<Renderable>();
     specs_world.register::<Friendly>();
 }

@@ -1,27 +1,9 @@
-//! specs systems.
 use crate::components::*;
-use crate::input;
 use crate::resources::*;
+use crate::input;
+
 use specs::{self, Join};
 use ggez_goodies::Vector2;
-
-pub struct MovementSystem;
-
-impl<'a> specs::System<'a> for MovementSystem {
-    type SystemData = (
-        specs::WriteStorage<'a, Position>,
-        specs::ReadStorage<'a, Motion>,
-    );
-
-    fn run(&mut self, (mut pos, motion): Self::SystemData) {
-        // The `.join()` combines multiple components,
-        // so we only access those entities which have
-        // both of them.
-        for (pos, motion) in (&mut pos, &motion).join() {
-            pos.0 += motion.velocity;
-        }
-    }
-}
 
 pub struct FriendlySystem;
 
@@ -105,12 +87,4 @@ impl<'a> specs::System<'a> for FriendlySystem {
             }
         }
     }
-}
-
-// Create specs dispatcher with systems
-pub fn register_systems() -> specs::Dispatcher<'static, 'static> {
-    specs::DispatcherBuilder::new()
-        .with(MovementSystem, "movement", &[])
-        .with(FriendlySystem, "friendly", &[])
-        .build()
 }
