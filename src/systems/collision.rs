@@ -57,36 +57,31 @@ impl<'a> specs::System<'a> for CollisionSystem {
                         (true, false) | (false, true) => {
                             // Entity on wall collision
                             let entity;
-                            let wall;
 
-                            // Figure out profile is which
+                            // Figure out profile is the entity
                             if profile_1.wall {
-                                wall = profile_1;
                                 entity = profile_2;
                             } else {
-                                wall = profile_2;
                                 entity = profile_1;
                             }
 
-                            let wall_hb = collider.get_hitbox(wall.id());
-                            let entity_hb = collider.get_hitbox(entity.id());
+                            let mut entity_hb = collider.get_hitbox(entity.id());
 
-                            // The normal is applied to the entity to make it no longer colide with the wall.
-                            let normal = entity_hb.value.normal_from(&wall_hb.value);
+                            // Remove hitbox and collect all colliders
+                            let walls = collider.remove_hitbox(entity.id());
+                            println!("{:?}", walls);
 
-                            let new_pos = entity_hb.value.pos + normal.dir()*normal.len();
-                            let new_vec = {
-                                let a = entity_hb.vel.value;
-                                let b = v2(normal.dir().y, -normal.dir().x);
+                            let walls = walls.iter()
+                                // Only keep walls
+                                .filter(|p| p.wall)
+                                // Get hitboxes
+                                .map(|p| collider.get_hitbox(p.id()));
 
-                                let dot_product = a.x * b.x + a.y * b.y;
-                                
-                                dot_product * b
-                            };
-                            println!("{:?}", new_vec);
+                            for wall in walls {
+                                entity_hb = handle_collision(entity_hb, wall);
+                            }
 
-                            collider.remove_hitbox(entity.id());
-                            collider.add_hitbox(entity, entity_hb.value.shape.place(new_pos).moving(new_vec));
+                            collider.add_hitbox(entity, entity_hb);
                         }
                         _ => ()
                     }

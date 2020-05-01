@@ -73,6 +73,9 @@ impl World {
             let x: f64 = rng.gen_range(0.0, 800.0);
             let y: f64 = rng.gen_range(0.0, 600.0);
 
+            let w: f64 = rng.gen_range(20.0, 32.0);
+            let h: f64 = rng.gen_range(20.0, 32.0);
+
             let entity = the_world
                 .specs_world
                 .create_entity()
@@ -81,14 +84,14 @@ impl World {
                     velocity: Vector2::new(0.0, 0.0),
                 })
                 .with(components::Renderable::Rectangle {
-                    w: 30.0,
-                    h: 20.0,
+                    w: w as f32,
+                    h: h as f32,
                     color: ggez::graphics::Color::new(0.0, 0.0, 1.0, 1.0),
                 })
                 .with(components::Friendly::default())
                 .build();
             
-            let hitbox = Shape::rect(v2(30.0, 20.0)).place(v2(x, y)).still();
+            let hitbox = Shape::rect(v2(w,h)).place(v2(x, y)).still();
             physics::add_box_collider(entity, hitbox, false, &mut the_world.specs_world);
         }
 
@@ -121,7 +124,7 @@ impl World {
                     ctx,
                     &self.square,
                     DrawParam::default()
-                        .dest(position.0)
+                        .dest(Point2::new(position.0.x-w/2.0, position.0.y-h/2.0))
                         .scale(Vector2::new(*w, *h))
                         .color(*color)
                 )?,
