@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::components::*;
 use crate::physics::*;
 
@@ -30,7 +32,7 @@ impl<'a> specs::System<'a> for CollisionSystem {
     fn run(&mut self, (mut collider, mut pos, mut motion, box_collider, _friendly): Self::SystemData) {
         let collider = collider.as_mut().unwrap();
 
-        // Fix motion
+        // Update motion from specs to collider world
         for (motion, box_collider) in (&motion, &box_collider).join() {
             let vel = HbVel::moving(v2(motion.velocity.x as f64, motion.velocity.y as f64));
 
@@ -42,48 +44,63 @@ impl<'a> specs::System<'a> for CollisionSystem {
 
         // Advance simulation to end of tick
         while collider.time() < end_time {
+            // Advance simulation to next collision or end of tick
             let time = collider.next_time().min(end_time);
             collider.set_time(time);
 
-            for (event, profile_1, profile_2) in collider.next() {
-                println!("{:?} between {:?} and {:?} at time {}.",
-                            event, profile_1, profile_2, collider.time());
+            // Collect collisions if there are any.
+            let mut collisions: VecDeque<(Profile, Profile)> = VecDeque::new();
+            for (e, profile_1, profile_2) in collider.next() {
+                if e == HbEvent::Collide {
+                    collisions.push_back((profile_1, profile_2));
+                }
+            }
 
-                if event == HbEvent::Collide {
-                    match (profile_1.wall, profile_2.wall) {
-                        (false, false) => {
-                            // Entity on entity collision
-                        }
-                        (true, false) | (false, true) => {
-                            // Entity on wall collision
-                            let entity;
+            // Handle all collisions
+            while let Some((profile_1, profile_2)) = collisions.pop_front() {
+                // Skip wall to wall collisions
+                if profile_1.wall && profile_2.wall {
+                    continue;
+                }
+                // Skip if collision is no longer relevant
+                if !collider.is_overlapping(profile_1.id(), profile_2.id()) {
+                    continue;
+                }
 
-                            // Figure out profile is the entity
-                            if profile_1.wall {
-                                entity = profile_2;
-                            } else {
-                                entity = profile_1;
-                            }
+                if profile_1.wall {
+                    let new_collisions = handle_wall_collision(profile_2, profile_1, collider);
 
-                            let mut entity_hb = collider.get_hitbox(entity.id());
+                    for other in new_collisions {
+                        collisions.push_back((profile_2, other));
+                    }
+                } else if profile_2.wall {
+                    let new_collisions = handle_wall_collision(profile_1, profile_2, collider);
 
-                            // Remove hitbox and collect all colliders
-                            let walls = collider.remove_hitbox(entity.id());
-                            println!("{:?}", walls);
+                    for other in new_collisions {
+                        collisions.push_back((profile_1, other));
+                    }
+                } else {
+                    let hb_1 = collider.get_hitbox(profile_1.id());
+                    let hb_2 = collider.get_hitbox(profile_2.id());
 
-                            let walls = walls.iter()
-                                // Only keep walls
-                                .filter(|p| p.wall)
-                                // Get hitboxes
-                                .map(|p| collider.get_hitbox(p.id()));
+                    let _ = collider.remove_hitbox(profile_1.id());
+                    let _ = collider.remove_hitbox(profile_2.id());
 
-                            for wall in walls {
-                                entity_hb = handle_collision(entity_hb, wall);
-                            }
+                    let (hb_1, hb_2) = resolve_entity_collision(hb_1, hb_2);
 
-                            collider.add_hitbox(entity, entity_hb);
-                        }
-                        _ => ()
+                    collider.add_hitbox(profile_1, hb_1);
+                    collider.add_hitbox(profile_2, hb_2);
+                    
+                    let new_collisions = collider.get_overlaps(profile_1.id());
+                    
+                    for other in new_collisions {
+                        collisions.push_back((profile_1, other));
+                    }
+
+                    let new_collisions = collider.get_overlaps(profile_2.id());
+
+                    for other in new_collisions {
+                        collisions.push_back((profile_2, other));
                     }
                 }
             }

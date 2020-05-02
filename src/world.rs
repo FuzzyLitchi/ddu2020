@@ -73,8 +73,8 @@ impl World {
             let x: f64 = rng.gen_range(0.0, 800.0);
             let y: f64 = rng.gen_range(0.0, 600.0);
 
-            let w: f64 = rng.gen_range(20.0, 32.0);
-            let h: f64 = rng.gen_range(20.0, 32.0);
+            let w: f64 = 20.0;
+            let h: f64 = 20.0;
 
             let entity = the_world
                 .specs_world
@@ -91,7 +91,7 @@ impl World {
                 .with(components::Friendly::default())
                 .build();
             
-            let hitbox = Shape::rect(v2(w,h)).place(v2(x, y)).still();
+            let hitbox = Shape::circle(w).place(v2(x, y)).still();
             physics::add_box_collider(entity, hitbox, false, &mut the_world.specs_world);
         }
 
